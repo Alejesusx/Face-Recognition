@@ -1,6 +1,6 @@
 import React from 'react'
 
-const FaceRecognition = ({ imageUrl, box }) => {
+const FaceRecognition = ({ imageUrl, box, err }) => {
   return (
     <div className='center ma'>
       <div className='absolute mt2'>
@@ -12,7 +12,7 @@ const FaceRecognition = ({ imageUrl, box }) => {
           alt=''
         />
         <div
-          className='bounding-box'
+          className={err ? 'invisible' : 'bounding-box'}
           style={{
             top: box.topRow,
             right: box.rightCol,

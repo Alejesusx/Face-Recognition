@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import Message from '../Message/Message'
 
 class Login extends React.Component {
   constructor(props) {
@@ -6,6 +7,7 @@ class Login extends React.Component {
     this.state = {
       loginEmail: '',
       loginPassword: '',
+      error: false,
     }
   }
 
@@ -29,15 +31,23 @@ class Login extends React.Component {
       .then((response) => response.json())
       .then((user) => {
         if (user.id) {
+          this.setState({ error: false })
           this.props.loadUser(user)
           this.props.onRouteChange('home')
+        } else {
+          this.props.onRouteChange('signin')
+          this.setState({ error: true })
         }
+      })
+      .catch((err) => {
+        this.setState({ error: true })
       })
   }
 
   render() {
     const { onRouteChange } = this.props
     return (
+      <>
       <article className='br3 ba dark-gray b--black-10 mv4 w-100 w-50-m w-35-l mw6 shadow-5 center formColor'>
         <main className='pa4 black-80'>
           <div className='measure'>
@@ -48,7 +58,7 @@ class Login extends React.Component {
                   Email
                 </label>
                 <input
-                  className='pa2 input-reset ba br2 bg-transparent hover-bg-black hover-white w-100'
+                  className='pa2 input-reset ba br2 bg-transparent hover-bg-black  w-100'
                   type='email'
                   name='email-address'
                   id='email-address'
@@ -60,7 +70,7 @@ class Login extends React.Component {
                   Password
                 </label>
                 <input
-                  className='b br2 pa2 input-reset ba bg-transparent hover-bg-black hover-white w-100'
+                  className='b br2 pa2 input-reset ba bg-transparent hover-bg-black  w-100'
                   type='password'
                   name='password'
                   id='password'
@@ -87,6 +97,12 @@ class Login extends React.Component {
           </div>
         </main>
       </article>
+      {this.state.error && (
+        <div className=' w-50-m w-35-l center'>
+        <Message  variant='danger'> Error logging in, invalid data</Message>
+      </div>
+      )}
+      </>
     )
   }
 }

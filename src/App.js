@@ -10,6 +10,7 @@ import { Component } from 'react'
 import Clarifai from 'clarifai'
 import Login from './components/Login/login'
 import Register from './components/Register/Register'
+import Message from './components/Message/Message'
 
 const app = new Clarifai.App({ apiKey: '63f7c7cb688644fbaddf57eecac02756' })
 
@@ -32,24 +33,27 @@ const particleOptions = {
     },
   },
 }
+const initialState = {
+  errorimg: false,
+  errorimgMsg: '',
+  input: '',
+  imageUrl: '',
+  box: {},
+  route: 'signin',
+  isSignedIn: false,
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    entries: '',
+    joined: '',
+  },
+}
 
 class App extends Component {
   constructor() {
     super()
-    this.state = {
-      input: '',
-      imageUrl: '',
-      box: {},
-      route: 'signin',
-      isSignedIn: false,
-      user: {
-        id: '',
-        name: '',
-        email: '',
-        entries: '',
-        joined: '',
-      },
-    }
+    this.state = initialState
   }
 
   loadUser = (data) => {
@@ -89,31 +93,50 @@ class App extends Component {
   }
 
   onButtonSubmit = (event) => {
-    this.setState({ imageUrl: this.state.input })
-    app.models
-      .predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
-      .then((response) => {
-        if (response) {
-          fetch('http://localhost:3333/image', {
-            method: 'put',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: this.state.user.id,
-            }),
+    if (this.state.input === '') {
+      alert('Please enter a link to an image')
+    } else {
+      this.setState({ imageUrl: this.state.input })
+      app.models
+        .predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
+        .then((response) => {
+          if (response.outputs[0].data.regions) {
+            this.displayFaceBox(this.calculateFaceLocation(response))
+            fetch('http://localhost:3333/image', {
+              method: 'put',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: this.state.user.id,
+              }),
+            })
+              .then((response) => response.json())
+              .then((count) => {
+                this.setState(
+                  Object.assign(this.state.user, { entries: count })
+                )
+                this.setState({ errorimg: false, errorimgMsg: '' })
+              })
+          } else {
+            this.setState({
+              errorimg: true,
+              errorimgMsg: 'Apparently there are no faces in here...',
+            })
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+          this.setState({
+            errorimg: true,
+            errorimgMsg:
+              'There was an error loading the image, try it again with another link to a image',
           })
-            .then((response) => response.json())
-            .then((count) =>
-              this.setState(Object.assign(this.state.user, { entries: count }))
-            )
-        }
-        this.displayFaceBox(this.calculateFaceLocation(response))
-      })
-      .catch((err) => console.log(err))
+        })
+    }
   }
 
   onRouteChange = (route) => {
     if (route === 'signout') {
-      this.setState({ isSignedIn: false })
+      this.setState(initialState)
     } else if (route === 'home') {
       this.setState({ isSignedIn: true })
     }
@@ -142,7 +165,13 @@ class App extends Component {
             <FaceRecognition
               box={this.state.box}
               imageUrl={this.state.imageUrl}
+              err={this.state.errorimg}
             />
+            {this.state.errorimg && (
+              <div className=' w-50-m w-35-l center'>
+                <Message variant='danger'> {this.state.errorimgMsg}</Message>
+              </div>
+            )}
           </>
         ) : this.state.route === 'register' ? (
           <Register
