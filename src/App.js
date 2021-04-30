@@ -12,7 +12,7 @@ import Login from './components/Login/login'
 import Register from './components/Register/Register'
 import Message from './components/Message/Message'
 
-const app = new Clarifai.App({ apiKey: '63f7c7cb688644fbaddf57eecac02756' })
+const app = new Clarifai.App({ apiKey: process.env.API_CLARIFAI })
 
 const particleOptions = {
   particles: {
@@ -102,7 +102,7 @@ class App extends Component {
         .then((response) => {
           if (response.outputs[0].data.regions) {
             this.displayFaceBox(this.calculateFaceLocation(response))
-            fetch('http://localhost:3333/image', {
+            fetch('https://murmuring-castle-43890.herokuapp.com/image', {
               method: 'put',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

@@ -51,7 +51,7 @@ class Register extends React.Component {
         msgError: 'Invalid Email address',
       })
     } else {
-      fetch('http://localhost:3333/register', {
+      fetch('https://murmuring-castle-43890.herokuapp.com/register', {
         method: 'post',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
